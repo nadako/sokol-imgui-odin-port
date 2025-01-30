@@ -91,8 +91,8 @@ setup :: proc() -> ^Context {
 	ctx.def_pip = sg.make_pipeline(pip_desc)
 
     // create a unfilterable/nonfiltering variants of the shader and pipeline
-    shd_desc.images[0].sample_type = .UNFILTERABLE_FLOAT
-    shd_desc.samplers[0].sampler_type = .NONFILTERING
+    shd_desc.images[IMG_tex].sample_type = .UNFILTERABLE_FLOAT
+    shd_desc.samplers[SMP_smp].sampler_type = .NONFILTERING
     shd_desc.label = "sokol-imgui-shader-unfilterable"
     ctx.shd_unfilterable = sg.make_shader(shd_desc)
     pip_desc.shader = ctx.shd_unfilterable
@@ -278,9 +278,9 @@ new_frame :: proc(desc: Frame_Desc) {
 }
 
 bind_image_sampler :: proc(bindings: ^sg.Bindings, imtex_id: imgui.TextureID) -> sg.Pipeline {
-    bindings.images[0] = image_from_imtextureid(imtex_id)
-    bindings.samplers[0] = sampler_from_imtextureid(imtex_id)
-    if (sg.query_pixelformat(sg.query_image_pixelformat(bindings.images[0])).filter) {
+    bindings.images[IMG_tex] = image_from_imtextureid(imtex_id)
+    bindings.samplers[SMP_smp] = sampler_from_imtextureid(imtex_id)
+    if (sg.query_pixelformat(sg.query_image_pixelformat(bindings.images[IMG_tex])).filter) {
         return ctx.def_pip
     } else {
 		return ctx.pip_unfilterable
@@ -349,10 +349,10 @@ render :: proc() {
 
     sg.apply_pipeline(ctx.def_pip)
 
-	vs_params := VS_Params {
+	vs_params := Vs_Params {
 		disp_size = { io.DisplaySize.x, io.DisplaySize.y }
 	}
-	sg.apply_uniforms(0, range_def(&vs_params))
+	sg.apply_uniforms(UB_vs_params, range_def(&vs_params))
 
 	bind := sg.Bindings {
 		vertex_buffers = {0 = ctx.vbuf},
@@ -381,7 +381,7 @@ render :: proc() {
 					sg.reset_state_cache()
                     sg.apply_viewport(0, 0, fb_width, fb_height, true)
                     sg.apply_pipeline(ctx.def_pip)
-                    sg.apply_uniforms(0, range_def(&vs_params))
+                    sg.apply_uniforms(UB_vs_params, range_def(&vs_params))
                     sg.apply_bindings(bind)
 				}
 			} else {
@@ -391,7 +391,7 @@ render :: proc() {
 
 					pip := bind_image_sampler(&bind, tex_id)
 					sg.apply_pipeline(pip)
-					sg.apply_uniforms(0, range_def(&vs_params))
+					sg.apply_uniforms(UB_vs_params, range_def(&vs_params))
 					bind.vertex_buffer_offsets[0] = vb_offset + i32(pcmd.VtxOffset * size_of(imgui.DrawVert))
 					sg.apply_bindings(bind)
 				}
@@ -420,11 +420,6 @@ range_def :: proc(v: ^$T) -> sg.Range {
 }
 
 ImDrawCallback_ResetRenderState := transmute(imgui.DrawCallback)(~uintptr(7))
-
-VS_Params :: struct {
-    disp_size: imgui.Vec2,
-	_pad_8: [8]u8,
-}
 
 handle_event :: proc(ev: ^sapp.Event) -> bool {
 	dpi_scale := ctx.cur_dpi_scale
