@@ -280,7 +280,7 @@ new_frame :: proc(desc: Frame_Desc) {
 bind_image_sampler :: proc(bindings: ^sg.Bindings, imtex_id: imgui.TextureID) -> sg.Pipeline {
     bindings.images[IMG_tex] = image_from_imtextureid(imtex_id)
     bindings.samplers[SMP_smp] = sampler_from_imtextureid(imtex_id)
-    if (sg.query_pixelformat(sg.query_image_pixelformat(bindings.images[IMG_tex])).filter) {
+    if sg.query_pixelformat(sg.query_image_pixelformat(bindings.images[IMG_tex])).filter {
         return ctx.def_pip
     } else {
 		return ctx.pip_unfilterable
@@ -317,12 +317,8 @@ render :: proc() {
         }
 
         // copy vertices and indices into common buffers
-        if (vtx_size > 0) {
-			copy(ctx.vertices[all_vtx_size:all_vtx_size+vtx_size], mem.slice_ptr(cl.VtxBuffer.Data, vtx_size))
-        }
-        if (idx_size > 0) {
-			copy(ctx.indices[all_idx_size:all_idx_size+idx_size], mem.slice_ptr(cl.IdxBuffer.Data, idx_size))
-        }
+        if vtx_size > 0 do copy(ctx.vertices[all_vtx_size:all_vtx_size+vtx_size], mem.slice_ptr(cl.VtxBuffer.Data, vtx_size))
+        if idx_size > 0 do copy(ctx.indices[all_idx_size:all_idx_size+idx_size], mem.slice_ptr(cl.IdxBuffer.Data, idx_size))
 
         all_vtx_size += vtx_size
         all_idx_size += idx_size
@@ -334,12 +330,8 @@ render :: proc() {
 
 	sg.push_debug_group("sokol-imgui")
 
-	if (all_vtx_size > 0) {
-		sg.update_buffer(ctx.vbuf, {ptr = raw_data(ctx.vertices), size = uint(all_vtx_size * size_of(imgui.DrawVert))})
-	}
-    if (all_idx_size > 0) {
-		sg.update_buffer(ctx.ibuf, {ptr = raw_data(ctx.indices), size = uint(all_idx_size * size_of(imgui.DrawIdx))})
-	}
+	if all_vtx_size > 0 do sg.update_buffer(ctx.vbuf, {ptr = raw_data(ctx.vertices), size = uint(all_vtx_size * size_of(imgui.DrawVert))})
+    if all_idx_size > 0 do sg.update_buffer(ctx.ibuf, {ptr = raw_data(ctx.indices), size = uint(all_idx_size * size_of(imgui.DrawIdx))})
 
 	dpi_scale := ctx.cur_dpi_scale
 	fb_width := int(io.DisplaySize.x * dpi_scale)
@@ -459,14 +451,14 @@ handle_event :: proc(ev: ^sapp.Event) -> bool {
 		case .KEY_DOWN:
 			update_modifiers(io, ev.modifiers)
             // intercept Ctrl-V, this is handled via EVENTTYPE_CLIPBOARD_PASTED
-			if (is_ctrl(ev.modifiers) && (ev.key_code == .V)) {
+			if is_ctrl(ev.modifiers) && (ev.key_code == .V) {
 				break branch
 			}
             // on web platform, don't forward Ctrl-X, Ctrl-V to the browser
-            if (is_ctrl(ev.modifiers) && (ev.key_code == .X)) {
+            if is_ctrl(ev.modifiers) && (ev.key_code == .X) {
                 sapp.consume_event()
             }
-            if (is_ctrl(ev.modifiers) && (ev.key_code == .C)) {
+            if is_ctrl(ev.modifiers) && (ev.key_code == .C) {
                 sapp.consume_event()
             }
             // it's ok to add ImGuiKey_None key events
@@ -474,14 +466,14 @@ handle_event :: proc(ev: ^sapp.Event) -> bool {
 		case .KEY_UP:
 			update_modifiers(io, ev.modifiers)
             // intercept Ctrl-V, this is handled via EVENTTYPE_CLIPBOARD_PASTED
-            if (is_ctrl(ev.modifiers) && (ev.key_code == .V)) {
+            if is_ctrl(ev.modifiers) && (ev.key_code == .V) {
                 break branch
             }
             // on web platform, don't forward Ctrl-X, Ctrl-V to the browser
-            if (is_ctrl(ev.modifiers) && (ev.key_code == .X)) {
+            if is_ctrl(ev.modifiers) && (ev.key_code == .X) {
                 sapp.consume_event()
             }
-            if (is_ctrl(ev.modifiers) && (ev.key_code == .C)) {
+            if is_ctrl(ev.modifiers) && (ev.key_code == .C) {
                 sapp.consume_event()
             }
             // it's ok to add ImGuiKey_None key events
